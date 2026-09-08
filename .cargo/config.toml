@@ -1,0 +1,22 @@
+# Windows has stack overflows when calling from Tauri, so we increase the default stack size used by the compiler.
+# Only applies to MSVC target (GNU target uses -Wl,--stack).
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-args=/STACK:16777220"]
+linker = "rust-lld"
+
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+ar = "x86_64-w64-mingw32-ar"
+
+# Reproducible public-service defaults for downstream desktop builds. Private
+# Modrinth services remain disabled by Wisp capabilities at runtime.
+[env]
+MODRINTH_API_BASE_URL = "https://api.modrinth.com"
+MODRINTH_API_URL = "https://api.modrinth.com/v2/"
+MODRINTH_API_URL_V3 = "https://api.modrinth.com/v3/"
+MODRINTH_LAUNCHER_META_URL = "https://launcher-meta.modrinth.com/"
+MODRINTH_URL = "https://modrinth.com/"
+MODRINTH_SOCKET_URL = "wss://disabled.invalid/"

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO offline_minecraft_skins (minecraft_user_uuid, texture_key, variant) VALUES (?, ?, ?) ON CONFLICT (minecraft_user_uuid) DO UPDATE SET texture_key = excluded.texture_key, variant = excluded.variant",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "e49c9da6792403ea644ebe23addbf8d4a3a4a727c4760da12276e5049157a8a6"
+}

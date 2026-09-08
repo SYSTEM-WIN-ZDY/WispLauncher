@@ -1,0 +1,108 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+dist
+tmp
+/out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/i18n-ally-custom-framework.yml
+
+# IDE - Trae
+.trae/*
+
+# IDE - IntelliJ
+.idea/
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+
+.turbo
+target
+generated
+.env
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.wrangler/
+*.d1
+*.dump.sql
+access-jwt*.txt
+/docs/
+.vercel/
+
+.astro
+.claude/*
+!.claude/skills/
+.letta
+
+# ZCode agent session data
+/.zcode/
+/zcode/
+
+# Agent skill lock files
+/skills-lock.json
+
+# Codex local verification artifacts
+/.codex-*
+
+# Oh My Code
+.omc/
+
+packages/tooling-config/script-utils/import-sort.js
+
+target/*
+
+# Temporary databases
+*.db
+*.sqlite
+*.sqlite3
+
+plugins-workspace/*
+apps/app/resources/blockbench-skin/
+
+# Oh My OpenCode
+.omo/
+.vs/
+
+# Mimosa security scan artifacts
+.mimosa/
+
+# Local Netlify folder
+.netlify
+.cf-reconcile-test
+.cf-reconcile-state-a

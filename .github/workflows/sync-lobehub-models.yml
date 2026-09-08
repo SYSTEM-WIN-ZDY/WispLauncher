@@ -1,0 +1,101 @@
+name: Sync LobeHub models
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-lobehub-models
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout WispLauncher
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Checkout LobeHub
+        id: upstream
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main https://github.com/lobehub/lobehub.git "$RUNNER_TEMP/lobehub"
+          sha="$(git -C "$RUNNER_TEMP/lobehub" rev-parse HEAD)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Generate model catalog
+        run: >-
+          node --disable-warning=ExperimentalWarning --experimental-vm-modules
+          scripts/wisp/sync-lobehub-models.mjs
+          --upstream "$RUNNER_TEMP/lobehub"
+          --commit "${{ steps.upstream.outputs.sha }}"
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet -- packages/app-lib/src/api/ai.rs packages/app-lib/src/api/lobehub_text_models.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Close obsolete pull request
+        if: steps.changes.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          base="${{ github.event.repository.default_branch }}"
+          branch="automation/sync-lobehub-models"
+          pr_number="$(gh pr list --state open --base "$base" --head "$branch" --json number --jq '.[0].number // empty')"
+          if [ -n "$pr_number" ]; then
+            gh pr close "$pr_number" --delete-branch --comment "Closing because the current LobeHub model catalog no longer differs from $base."
+          fi
+
+      - name: Push model update and create pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          base="${{ github.event.repository.default_branch }}"
+          branch="automation/sync-lobehub-models"
+          upstream_sha="${{ steps.upstream.outputs.sha }}"
+          short_sha="${upstream_sha:0:12}"
+          title="chore(ai): sync LobeHub models"
+          body="Automated synchronization of supported chat models from [LobeHub](https://github.com/lobehub/lobehub/tree/${upstream_sha}/packages/model-bank/src/aiModels) at \`${upstream_sha}\`."
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          gh auth setup-git
+
+          expected=""
+          if git ls-remote --exit-code --heads origin "refs/heads/$branch" >/dev/null 2>&1; then
+            git fetch --no-tags origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            expected="$(git rev-parse "refs/remotes/origin/$branch")"
+          fi
+
+          git switch -C "$branch"
+          git add packages/app-lib/src/api/ai.rs packages/app-lib/src/api/lobehub_text_models.json
+          git commit -m "chore(ai): sync LobeHub models at $short_sha"
+          git push --force-with-lease="refs/heads/$branch:$expected" origin "HEAD:refs/heads/$branch"
+
+          pr_number="$(gh pr list --state open --base "$base" --head "$branch" --json number --jq '.[0].number // empty')"
+          if [ -n "$pr_number" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$pr_number" -f title="$title" -f body="$body" >/dev/null
+          else
+            gh pr create --base "$base" --head "$branch" --title "$title" --body "$body"
+          fi

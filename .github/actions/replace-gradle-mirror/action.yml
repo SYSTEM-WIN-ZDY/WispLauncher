@@ -1,0 +1,18 @@
+name: Replace Gradle mirror with official distribution URL
+description: Replaces the Tencent Cloud Gradle mirror URL with the official Gradle distribution URL in gradle-wrapper.properties
+
+runs:
+  using: composite
+  steps:
+    - name: Replace (Linux / macOS)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        sed -i.bak 's|https\\://mirrors\.cloud\.tencent\.com/gradle/|https\\://services.gradle.org/distributions/|' packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties
+        rm -f packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties.bak
+
+    - name: Replace (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        (Get-Content packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties) -replace 'https\\://mirrors\.cloud\.tencent\.com/gradle/', 'https\://services.gradle.org/distributions/' | Set-Content packages/app-lib/java/gradle/wrapper/gradle-wrapper.properties

@@ -1,0 +1,33 @@
+{
+  "tag_name": "v1.9.1",
+  "assets": [
+    " Wisp.Launcher-1.9.1-1.aarch64.rpm",
+    " Wisp.Launcher-1.9.1-1.aarch64.rpm.sig",
+    " Wisp.Launcher-1.9.1-1.x86_64.rpm",
+    " Wisp.Launcher-1.9.1-1.x86_64.rpm.sig",
+    " Wisp.Launcher_1.9.1_aarch64.AppImage",
+    " Wisp.Launcher_1.9.1_aarch64.AppImage.sig",
+    " Wisp.Launcher_1.9.1_aarch64.AppImage.tar.gz",
+    " Wisp.Launcher_1.9.1_aarch64.AppImage.tar.gz.sig",
+    " Wisp.Launcher_1.9.1_amd64.AppImage",
+    " Wisp.Launcher_1.9.1_amd64.AppImage.sig",
+    " Wisp.Launcher_1.9.1_amd64.AppImage.tar.gz",
+    " Wisp.Launcher_1.9.1_amd64.AppImage.tar.gz.sig",
+    " Wisp.Launcher_1.9.1_amd64.deb",
+    " Wisp.Launcher_1.9.1_amd64.deb.sig",
+    " Wisp.Launcher_1.9.1_arm64.deb",
+    " Wisp.Launcher_1.9.1_arm64.deb.sig",
+    " Wisp.Launcher_1.9.1_universal.dmg",
+    " Wisp.Launcher_1.9.1_x64-setup.exe",
+    " Wisp.Launcher_1.9.1_x64-setup.exe.sig",
+    " Wisp.Launcher_1.9.1_x64-setup.nsis.zip",
+    " Wisp.Launcher_1.9.1_x64-setup.nsis.zip.sig",
+    " Wisp.Launcher_universal.app.tar.gz",
+    " Wisp.Launcher_universal.app.tar.gz.sig",
+    " Wisp_Launcher_1.9.1_x64_modern-setup.exe",
+    " Wisp_Launcher_1.9.1_x64_modern-setup.exe.sig",
+    " Wisp_Launcher_1.9.1_x64_nsis-setup.exe",
+    " Wisp_Launcher_1.9.1_x64_nsis-setup.exe.sig",
+    " Wisp_Launcher_1.9.1_x64_portable.zip"
+  ]
+}

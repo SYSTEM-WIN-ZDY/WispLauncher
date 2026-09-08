@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT texture_key, variant AS 'variant: MinecraftSkinVariant' FROM offline_minecraft_skins WHERE minecraft_user_uuid = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "texture_key",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "variant: MinecraftSkinVariant",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "8ab0d181dec79ff1e034964116b7613aad978804da6684ec8fd75473514085e7"
+}

@@ -1,0 +1,203 @@
+{
+  "action.no-permission": {
+    "defaultMessage": "Nemaš dozvolu."
+  },
+  "badge.alpha": {
+    "defaultMessage": "Alfa"
+  },
+  "badge.beta": {
+    "defaultMessage": "Beta"
+  },
+  "badge.beta-release": {
+    "defaultMessage": "Beta izdanje"
+  },
+  "badge.new": {
+    "defaultMessage": "Novo"
+  },
+  "badge.release": {
+    "defaultMessage": "Izdati"
+  },
+  "browse.filter-results": {
+    "defaultMessage": "Filtriranje resultata..."
+  },
+  "browse.no-results": {
+    "defaultMessage": "Nema rezultata za tvoju potragu!"
+  },
+  "browse.search.placeholder": {
+    "defaultMessage": "Traži {projectType}..."
+  },
+  "browse.selected-projects-floating-bar.aria-label": {
+    "defaultMessage": "Izabrani projekti"
+  },
+  "browse.selected-projects-floating-bar.install": {
+    "defaultMessage": "Instaliraj {count, plural, one {# projekat} other {# projekata}}"
+  },
+  "browse.selected-projects-floating-bar.selected-count": {
+    "defaultMessage": "{count, plural, one {# projekata izabran} other {# projekata izabranih}}"
+  },
+  "browse.selected-projects-leave-modal.admonition-body": {
+    "defaultMessage": "Izabrali ste {count, plural, one {# projekat} other {# projekata}} za instalaciju. Instalirajte ih sada ili se bez instalacije vratite."
+  },
+  "browse.selected-projects-leave-modal.admonition-header": {
+    "defaultMessage": "Izabrani projekati još nisu instalirani"
+  },
+  "browse.selected-projects-leave-modal.discard": {
+    "defaultMessage": "Odbaci"
+  },
+  "browse.selected-projects-leave-modal.header": {
+    "defaultMessage": "Izabrani projekati još nisu instalirani"
+  },
+  "browse.view-prefix": {
+    "defaultMessage": "Pogled:"
+  },
+  "button.accept": {
+    "defaultMessage": "Prihvati"
+  },
+  "button.add-server-to-instance": {
+    "defaultMessage": "Dodaj server instanci"
+  },
+  "button.affiliate-links": {
+    "defaultMessage": "Partnerski/sponzorisani linkovi"
+  },
+  "button.analytics": {
+    "defaultMessage": "Analitike"
+  },
+  "button.back": {
+    "defaultMessage": "Nazad"
+  },
+  "button.cancel": {
+    "defaultMessage": "Odustaj"
+  },
+  "button.change-version": {
+    "defaultMessage": "Promeni verziju"
+  },
+  "button.create-a-project": {
+    "defaultMessage": "Kreiraj projekat"
+  },
+  "content-type.content.lowercase": {
+    "defaultMessage": "sadržaji"
+  },
+  "content-type.item.lowercase": {
+    "defaultMessage": "{count, plural, one {sadržaj} other {sadržaji}}"
+  },
+  "content.card.select-project": {
+    "defaultMessage": "Izaberi {project}"
+  },
+  "content.confirm-bulk-update.admonition-body": {
+    "defaultMessage": "Jesi li siguran da želiš ažuirati {count, plural, one {# projekat} few {# projekta} other {# projekata}} na najnoviju verziju? Preporučeno je ažuirati sadržaje jedan po jedan."
+  },
+  "content.confirm-bulk-update.admonition-header": {
+    "defaultMessage": "Upozorenje ažuiranja"
+  },
+  "content.confirm-bulk-update.header": {
+    "defaultMessage": "Ažuiranje projekata"
+  },
+  "content.confirm-bulk-update.update-button": {
+    "defaultMessage": "Ažuirajte {count, plural, one {# projekat} few {# projekta} other {# projekata}}"
+  },
+  "content.confirm-deletion.admonition-body": {
+    "defaultMessage": "Brisanje moda može trajno promeniti tvoj svet i može dovesti do nestanka sadržaja ili neočekivanih problema kada ga ponovo pokreneš."
+  },
+  "content.confirm-deletion.header": {
+    "defaultMessage": "Izbriši {itemType}"
+  },
+  "installation-settings.confirm-version-change-description": {
+    "defaultMessage": "Promena na verziju {gameVersion} če modificirati sledeče sadržaje na tvom serveru."
+  },
+  "installation-settings.incompatible-content.game-version-warning-body": {
+    "defaultMessage": "Kod promene verzije igre, možemo ili isključiti nekompatibilni instalirani sadržaj ili pokušati rešiti nekompatibilnosti."
+  },
+  "installation-settings.incompatible-content.loader-change-body": {
+    "defaultMessage": "Kod promene učitavača, sav instalirani sadržaj će biti isključen. U mestu toga preporučujemo resetiranje servera."
+  },
+  "installation-settings.incompatible-content.loader-change-title": {
+    "defaultMessage": "Promena učitavača je destruktivno"
+  },
+  "label.created-ago": {
+    "defaultMessage": "Kreirano {ago}"
+  },
+  "label.played": {
+    "defaultMessage": "Igrano {ago}"
+  },
+  "locale.en-US": {
+    "defaultMessage": "Engleski (Sjedinjene Američke Države)"
+  },
+  "project.server.language.en": {
+    "defaultMessage": "Engleski"
+  },
+  "search.filter.locked.default.description": {
+    "defaultMessage": "Otključavanje ovog filtera može omogućiti instalaciju nekompatibilnog sadržaja."
+  },
+  "search.filter_type.modpack_loader": {
+    "defaultMessage": "Učitavač"
+  },
+  "search.server_content_type.modpack": {
+    "defaultMessage": "Modificiran"
+  },
+  "settings.language.warning": {
+    "defaultMessage": "Promena jezika {platform} može dovesti do toga da se neki sadržaj prikaže na engleskom jeziku ako prevod nije dostupan. {platform} još uvek nije u potpunosti prevedena, tako da neki sadržaj može ostati na engleskom jeziku za određene jezike."
+  },
+  "tag.category.custom-content": {
+    "defaultMessage": "Prilagođeni sadržaj"
+  },
+  "tag.loader.mrpack": {
+    "defaultMessage": "Modpack"
+  },
+  "ui.confirm-leave-modal.header": {
+    "defaultMessage": "Imaš nesačuvane promene"
+  },
+  "ui.confirm-leave-modal.leave": {
+    "defaultMessage": "Napusti stranicu"
+  },
+  "ui.confirm-leave-modal.stay": {
+    "defaultMessage": "Ostani na stranici"
+  },
+  "ui.confirm-leave-modal.title": {
+    "defaultMessage": "Napusti stranicu?"
+  },
+  "ui.stacked-admonitions.alert-count": {
+    "defaultMessage": "{count, plural, one {# uzbuna} few {# uzbune} other {# uzbuna}}"
+  },
+  "ui.stacked-admonitions.dismiss-all": {
+    "defaultMessage": "Odbaci sve"
+  },
+  "version.content.name": {
+    "defaultMessage": "Ime"
+  },
+  "version.content.version": {
+    "defaultMessage": "Verzija"
+  },
+  "version.section.content": {
+    "defaultMessage": "Sadržaji"
+  },
+  "version.section.content.search-placeholder": {
+    "defaultMessage": "Traži sadržaje..."
+  },
+  "version.section.files": {
+    "defaultMessage": "Datoteke"
+  },
+  "version.section.included-content": {
+    "defaultMessage": "Uključeni sadržaji"
+  },
+  "version.section.no-modpack-mod-loader": {
+    "defaultMessage": "Bez učitavača modova"
+  },
+  "version.section.optional-dependencies": {
+    "defaultMessage": "Opcionalne zavisnosti"
+  },
+  "version.section.required-content": {
+    "defaultMessage": "Potrebni sadržaji"
+  },
+  "version.section.supplementary-resources": {
+    "defaultMessage": "Dodatni resursi"
+  },
+  "version.supplementary-resources.file": {
+    "defaultMessage": "Datoteka"
+  },
+  "version.supplementary-resources.size": {
+    "defaultMessage": "Veličina"
+  },
+  "version.supplementary-resources.type": {
+    "defaultMessage": "Tip"
+  }
+}

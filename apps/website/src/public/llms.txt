@@ -1,0 +1,25 @@
+# WispLauncher
+
+WispLauncher is a free, open-source, ad-free, cross-platform Minecraft Java Edition launcher which supports Windows, macOS, and Linux.
+
+It supports searching, installing, and updating mods, modpacks, resource packs, and shaders from both Modrinth and CurseForge.
+
+WispLauncher also provides instance management, Microsoft and offline/Yggdrasil accounts, Java management, skin customization, and Wisp Labs.
+
+Wisp Labs includes:
+- Gradient text generator
+- Minecraft Java Edition seed map
+- 3D schematic workshop
+- Recipe generator
+- AI Powered Minecraft mod translation tool
+
+WispLauncher is a fork of Modrinth App.
+
+Official website:
+https://github.com/SYSTEM-WIN-ZDY/WispLauncher
+
+Source code:
+https://github.com/SYSTEM-WIN-ZDY/WispLauncher
+
+Changelog:
+https://github.com/SYSTEM-WIN-ZDY/WispLauncher/releases

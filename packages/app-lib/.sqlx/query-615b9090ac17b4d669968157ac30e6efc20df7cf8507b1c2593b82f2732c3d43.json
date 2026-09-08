@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM offline_minecraft_skins WHERE minecraft_user_uuid = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "615b9090ac17b4d669968157ac30e6efc20df7cf8507b1c2593b82f2732c3d43"
+}

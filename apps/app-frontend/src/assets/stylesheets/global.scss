@@ -1,0 +1,341 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '@modrinth/ui/src/styles/tailwind-utilities.css';
+
+@font-face {
+	font-family: 'bundled-minecraft-font-mrapp';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 400;
+	src: url('https://cdn-raw.modrinth.com/fonts/minecraft/regular.otf') format('opentype');
+}
+
+@font-face {
+	font-family: 'bundled-minecraft-font-mrapp';
+	font-style: italic;
+	font-display: swap;
+	font-weight: 400;
+	src: url('https://cdn-raw.modrinth.com/fonts/minecraft/italic.otf') format('opentype');
+}
+
+@font-face {
+	font-family: 'bundled-minecraft-font-mrapp';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 600;
+	src: url('https://cdn-raw.modrinth.com/fonts/minecraft/bold.otf') format('opentype');
+}
+
+@font-face {
+	font-family: 'bundled-minecraft-font-mrapp';
+	font-style: italic;
+	font-display: swap;
+	font-weight: 600;
+	src: url('https://cdn-raw.modrinth.com/fonts/minecraft/bold-italic.otf') format('opentype');
+}
+
+.font-minecraft {
+	font-family: 'bundled-minecraft-font-mrapp', monospace;
+}
+
+:root {
+	font-family: var(--font-standard, sans-serif), sans-serif;
+	color-scheme: dark;
+	--view-width: calc(100% - 5rem);
+	--expanded-view-width: calc(100% - 13rem);
+	--medal-promotion-bg: #000;
+	--medal-promotion-bg-orange: rgba(208, 246, 255, 0.25);
+	--medal-promotion-text-orange: #42abff;
+	--medal-promotion-bg-gradient: linear-gradient(
+		90deg,
+		rgba(66, 170, 255, 0.15),
+		rgba(0, 0, 0, 0) 100%
+	);
+}
+
+body {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+// `color-scheme: dark` makes the UA paint an opaque dark canvas, and
+// `defaults.scss` gives body an opaque `--color-bg`. Both would sit in front of
+// the transparent window, so they have to be cleared.
+html,
+html body {
+	background-color: transparent;
+}
+
+// Opaque snapshots of the surface palette. The transparent window mode derives
+// its translucent surfaces from these, since a token cannot reference itself.
+:root {
+	--surface-1-opaque: var(--surface-1);
+	--surface-1-5-opaque: var(--surface-1-5);
+	--surface-2-opaque: var(--surface-2);
+	--surface-2-5-opaque: var(--surface-2-5);
+	--surface-3-opaque: var(--surface-3);
+	--surface-4-opaque: var(--surface-4);
+	--surface-5-opaque: var(--surface-5);
+}
+
+// Declared on `body`, not on the root: the opaque snapshots above live on the
+// root, and redefining the same tokens on that same element would form a
+// reference cycle that resolves every background to `transparent`. Modals and
+// dropdowns teleport into `body`, so they still inherit these.
+html.transparent-window body {
+	// `--transparent-window-alpha` is the user-facing opacity. Deeper surfaces
+	// interpolate toward opaque so that stacked panels keep their contrast at
+	// low settings; at 100% every layer lands back on fully opaque.
+	--window-alpha: var(--transparent-window-alpha, 55%);
+	--window-alpha-1-5: calc(var(--window-alpha) + (100% - var(--window-alpha)) * 0.16);
+	--window-alpha-2: calc(var(--window-alpha) + (100% - var(--window-alpha)) * 0.3);
+	--window-alpha-chrome: calc(var(--window-alpha) + (100% - var(--window-alpha)) * 0.38);
+	--window-alpha-3: calc(var(--window-alpha) + (100% - var(--window-alpha)) * 0.55);
+	--window-alpha-4: calc(var(--window-alpha) + (100% - var(--window-alpha)) * 0.6);
+	--window-alpha-5: calc(var(--window-alpha) + (100% - var(--window-alpha)) * 0.78);
+
+	--surface-1: color-mix(in srgb, var(--surface-1-opaque) var(--window-alpha), transparent);
+	--surface-1-5: color-mix(in srgb, var(--surface-1-5-opaque) var(--window-alpha-1-5), transparent);
+	--surface-2: color-mix(in srgb, var(--surface-2-opaque) var(--window-alpha-2), transparent);
+	--surface-2-5: color-mix(
+		in srgb,
+		var(--surface-2-5-opaque) var(--window-alpha-chrome),
+		transparent
+	);
+	--surface-3: color-mix(in srgb, var(--surface-3-opaque) var(--window-alpha-3), transparent);
+	--surface-4: color-mix(in srgb, var(--surface-4-opaque) var(--window-alpha-4), transparent);
+	--surface-5: color-mix(in srgb, var(--surface-5-opaque) var(--window-alpha-5), transparent);
+
+	// The semantic aliases resolve against the root surfaces at declaration
+	// time, so overriding the primitives above does not reach them.
+	--color-bg: color-mix(in srgb, var(--surface-1-opaque) var(--window-alpha), transparent);
+	--color-raised-bg: color-mix(in srgb, var(--surface-3-opaque) var(--window-alpha-3), transparent);
+	--color-button-bg: color-mix(in srgb, var(--surface-4-opaque) var(--window-alpha-4), transparent);
+	--color-divider: color-mix(in srgb, var(--surface-5-opaque) var(--window-alpha-5), transparent);
+	--color-divider-dark: color-mix(
+		in srgb,
+		var(--surface-5-opaque) var(--window-alpha-5),
+		transparent
+	);
+	--color-tooltip-bg: var(--surface-3-opaque);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+	-webkit-font-smoothing: antialiased;
+	will-change: filter;
+}
+
+.badge {
+	display: flex;
+	border-radius: var(--radius-md);
+	white-space: nowrap;
+	align-items: center;
+	background-color: var(--color-bg);
+	padding-block: var(--gap-sm);
+	padding-inline: var(--gap-lg);
+	width: min-content;
+
+	svg {
+		width: 1.1rem;
+		height: 1.1rem;
+		margin-right: 0.5rem;
+	}
+
+	&.featured {
+		background-color: var(--color-brand-highlight);
+		color: var(--color-contrast);
+	}
+}
+
+* {
+	scrollbar-width: auto;
+	scrollbar-color: var(--color-scrollbar) var(--color-bg);
+}
+
+// Text stays selectable by default so users can copy content anywhere. The
+// browser default (`auto`) already covers editable controls, so only surfaces
+// that conflict with native window behaviour opt out: drag regions and
+// explicit `.no-select` / `select-none` controls.
+[data-tauri-drag-region],
+[data-tauri-drag-region] * {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+[data-tauri-drag-region] input,
+[data-tauri-drag-region] textarea,
+[data-tauri-drag-region] [contenteditable] {
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+	width: 16px;
+	border: 3px solid transparent;
+	opacity: 0.5;
+	transition: opacity 0.2s ease-in-out;
+}
+
+*::-webkit-scrollbar:hover {
+	opacity: 1;
+}
+
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: var(--color-scrollbar);
+	border-radius: var(--radius-lg);
+	border: 5px solid transparent;
+	background-clip: content-box;
+}
+
+.highlighted {
+	box-shadow: 0 0 1rem var(--color-brand) !important;
+}
+
+.gecko {
+	background-color: var(--color-raised-bg);
+	box-shadow: none !important;
+}
+
+img {
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+.card-shadow {
+	box-shadow: var(--shadow-card);
+}
+
+// From the Bootstrap project
+// The MIT License (MIT)
+// Copyright (c) 2011-2023 The Bootstrap Authors
+// https://github.com/twbs/bootstrap/blob/2f617215755b066904248525a8c56ea425dde871/scss/mixins/_visually-hidden.scss#L8
+.visually-hidden {
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+
+	&:not(caption) {
+		position: absolute !important;
+	}
+}
+
+@import '@modrinth/assets/omorphia.scss';
+
+input {
+	border-radius: var(--size-rounded-sm);
+	box-sizing: border-box;
+	border: 2px solid transparent;
+	// safari iOS rounds inputs by default
+	// set the appearance to none to prevent this
+	appearance: none !important;
+}
+
+pre {
+	font-weight: var(--font-weight-regular);
+}
+
+input,
+textarea {
+	background: var(--color-button-bg);
+	color: var(--color-text);
+	padding: 0.5rem 1rem;
+	font-weight: var(--font-weight-medium);
+	border: none;
+	outline: 2px solid transparent;
+	box-shadow:
+		var(--shadow-inset-sm),
+		0 0 0 0 transparent;
+	transition: box-shadow 0.1s ease-in-out;
+	min-height: 36px;
+
+	&:focus,
+	&:focus-visible {
+		box-shadow:
+			inset 0 0 0 transparent,
+			0 0 0 0.25rem var(--color-brand-shadow);
+		color: var(--color-button-text-active);
+	}
+
+	&:disabled,
+	&[disabled='true'] {
+		opacity: 0.6;
+		pointer-events: none;
+		cursor: not-allowed;
+	}
+
+	&:focus::placeholder {
+		opacity: 0.8;
+	}
+
+	&::placeholder {
+		color: var(--color-button-text);
+		opacity: 0.6;
+	}
+}
+
+.slide-enter-active,
+.slide-leave-active {
+	transition:
+		transform 0.2s ease,
+		opacity 0.2s ease;
+}
+
+.slide-enter-from {
+	transform: translateY(30px);
+	opacity: 0;
+}
+
+.slide-leave-to {
+	transform: translateY(-30px);
+	opacity: 0;
+}
+
+.page-transition-layer {
+	grid-area: 1 / 1;
+	min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.page-slide-enter-active {
+		transition:
+			transform 0.18s ease,
+			opacity 0.14s ease;
+		will-change: transform, opacity;
+	}
+
+	.page-slide-enter-from {
+		transform: translateY(12px);
+		opacity: 0;
+	}
+
+	.page-slide-enter-to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}

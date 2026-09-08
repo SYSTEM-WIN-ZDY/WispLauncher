@@ -1,0 +1,29 @@
+name = "wisp-telemetry-dashboard"
+main = ".output/server/index.mjs"
+compatibility_date = "2025-08-13"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+
+[assets]
+directory = ".output/public"
+binding = "ASSETS"
+
+[vars]
+NUXT_PUBLIC_ADMIN_ORIGIN = "https://admin.axlmc.org"
+NUXT_PUBLIC_WORKER_HEALTH_URL = "https://telemetry.axlmc.org/health"
+NUXT_STORE_ERROR_CONTEXT = "true"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wisp-telemetry"
+database_id = "8692e2b1-6156-4b0b-94f5-6e7204c05dff"
+remote = true
+
+[[r2_buckets]]
+binding = "ERROR_CONTEXTS"
+bucket_name = "wisp-telemetry-errors"
+remote = true
+
+[observability]
+enabled = true
+head_sampling_rate = 0.01

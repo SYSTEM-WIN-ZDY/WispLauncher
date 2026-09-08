@@ -1,0 +1,130 @@
+name: Wisp desktop CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'apps/telemetry-dashboard/**'
+      - 'apps/telemetry-worker/**'
+  pull_request:
+    paths-ignore:
+      - 'apps/telemetry-dashboard/**'
+      - 'apps/telemetry-worker/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@008330803749db0355799c700092d9a85fd074e9 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check immutable database migrations
+        env:
+          MIGRATION_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/wisp/check-migrations.mjs --base "${MIGRATION_BASE_REF:-HEAD^}"
+          node scripts/wisp/check-migrations.mjs --release
+      - run: node scripts/wisp/brand-guard.mjs
+      - run: node scripts/wisp/i18n-check.mjs
+      - run: cargo fmt --all --check
+
+  desktop:
+    needs: guardrails
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      SQLX_OFFLINE: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+      - uses: pnpm/action-setup@008330803749db0355799c700092d9a85fd074e9 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+      - name: Set up Rust compiler cache
+        if: runner.os == 'Windows'
+        uses: mozilla-actions/sccache-action@2df7dbab909c49ab7d3382d05da469f3f975c2d6 # v0.0.7
+      - name: Check Rust compiler cache availability
+        id: sccache
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: bash
+        env:
+          SCCACHE_GHA_ENABLED: 'true'
+        run: ${SCCACHE_PATH} rustc -vV
+      - name: Enable Rust compiler cache
+        if: runner.os == 'Windows' && steps.sccache.outcome == 'success'
+        shell: bash
+        run: |
+          echo 'RUSTC_WRAPPER=sccache' >> "$GITHUB_ENV"
+          echo 'SCCACHE_GHA_ENABLED=true' >> "$GITHUB_ENV"
+          echo 'SCCACHE_CACHE_SIZE=4G' >> "$GITHUB_ENV"
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: pnpm install --frozen-lockfile
+      - name: Install Blockbench skin editor dependencies
+        run: npm ci
+        working-directory: third-party/blockbench
+      - uses: ./.github/actions/replace-gradle-mirror
+      - run: pnpm --filter @modrinth/app-frontend build
+      - name: Test version metadata writes
+        run: cargo test --package theseus writing_version_info_creates_missing_parent_directory
+      - run: cargo check --package theseus_gui --features updater
+      - name: Build modern Windows installer
+        if: runner.os == 'Windows'
+        run: pnpm --filter @modrinth/app tauri build --config tauri-modern.conf.json
+      - name: Verify modern Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem target/release/bundle/nsis -Filter '*-setup.exe' -File)
+          if ($installers.Count -ne 1) {
+            throw "Expected one modern NSIS installer, found $($installers.Count)"
+          }
+          Write-Output "Built modern installer: $($installers[0].Name)"
+      - name: Build native NSIS Windows installer
+        if: runner.os == 'Windows'
+        run: pnpm --filter @modrinth/app tauri build
+      - name: Verify native NSIS Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem target/release/bundle/nsis -Filter '*-setup.exe' -File)
+          if ($installers.Count -ne 1) {
+            throw "Expected one native NSIS installer, found $($installers.Count)"
+          }
+          Write-Output "Built native NSIS installer: $($installers[0].Name)"
+      - name: Show Rust compiler cache statistics
+        if: runner.os == 'Windows' && steps.sccache.outcome == 'success' && always()
+        shell: bash
+        run: ${SCCACHE_PATH} --show-stats
+
+  website:
+    needs: guardrails
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: pnpm/action-setup@008330803749db0355799c700092d9a85fd074e9 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @wisp/website build
