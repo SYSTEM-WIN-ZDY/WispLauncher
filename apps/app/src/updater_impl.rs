@@ -11,9 +11,15 @@ use theseus::{LoadingBarType, emit_loading, init_loading, launcher_user_agent};
 use tokio::time::Instant;
 use url::Url;
 
-// Updates are fetched exclusively from the WispLauncher GitHub releases.
-const GITHUB_LATEST_ENDPOINT: &str =
-    "https://github.com/SYSTEM-WIN-ZDY/WispLauncher/releases/latest/download/latest.json";
+// Updates are fetched from the WispLauncher GitHub releases, falling back to
+// the Gitee mirror when GitHub is unreachable. The updater plugin tries each
+// endpoint in order and stops at the first one that succeeds.
+// Gitee does not support the `latest/download` path, so its manifest lives on
+// the fixed `Release` tag.
+const UPDATE_ENDPOINTS: [&str; 2] = [
+    "https://github.com/SYSTEM-WIN-ZDY/WispLauncher/releases/latest/download/latest.json",
+    "https://gitee.com/system-win-zdy/WispLauncher/releases/download/Release/latest.json",
+];
 
 // The updater plugin builds `Update` with no request timeout, so a stalled
 // connection would hang the download forever. Bound the whole download
@@ -40,15 +46,18 @@ pub struct PendingUpdateData(pub Mutex<Option<(Arc<Update>, Vec<u8>)>>);
 // ── Updater plugin helpers ───────────────────────────────────────
 
 fn update_endpoints() -> Result<Vec<Url>> {
-    let endpoint =
-        Url::parse(GITHUB_LATEST_ENDPOINT).map_err(|error| {
-            theseus::Error::from(theseus::ErrorKind::OtherError(
-                error.to_string(),
-            ))
-            .into()
-        })?;
-
-    Ok(vec![endpoint])
+    UPDATE_ENDPOINTS
+        .iter()
+        .map(|endpoint| {
+            Url::parse(endpoint)
+                .map_err(|error| {
+                    theseus::Error::from(theseus::ErrorKind::OtherError(
+                        error.to_string(),
+                    ))
+                })
+                .map_err(Into::into)
+        })
+        .collect()
 }
 
 /// Build the platform-updater with the given endpoints and run a check.

@@ -3224,12 +3224,37 @@ pub(crate) async fn validate_file_content(
                 serde_json::from_reader::<_, serde_json::Value>(file)?;
             }
             ContentValidation::Jar => {
-                zip::ZipArchive::new(file).map_err(|error| {
+                let mut archive = zip::ZipArchive::new(file).map_err(|error| {
                     ErrorKind::OtherError(format!(
                         "Invalid JAR archive {}: {error}",
                         path.display()
                     ))
                 })?;
+                // Verify every entry's data, not just the central directory.
+                // ZipArchive::new only parses the end-of-archive record, so a
+                // JAR whose central directory is intact but whose entry data
+                // is truncated (a common partial-download signature) would
+                // pass. Reading each entry forces the zip crate to verify its
+                // CRC-32, rejecting truncated or corrupted entries.
+                for index in 0..archive.len() {
+                    let mut entry = archive
+                        .by_index(index)
+                        .map_err(|error| {
+                            ErrorKind::OtherError(format!(
+                                "Corrupt JAR entry {index} in {}: {error}",
+                                path.display()
+                            ))
+                        })?;
+                    let mut sink =
+                        std::io::sink();
+                    std::io::copy(&mut entry, &mut sink).map_err(|error| {
+                        ErrorKind::OtherError(format!(
+                            "Truncated JAR entry {index} ({}) in {}: {error}",
+                            entry.name(),
+                            path.display()
+                        ))
+                    })?;
+                }
             }
         }
         Ok(())

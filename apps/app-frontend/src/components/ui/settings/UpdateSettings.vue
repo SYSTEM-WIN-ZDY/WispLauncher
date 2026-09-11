@@ -69,6 +69,11 @@ const messages = defineMessages({
 		id: 'app.settings.updates.security',
 		defaultMessage: 'Updates are installed only when their cryptographic signature is valid.',
 	},
+	source: {
+		id: 'app.settings.updates.source-auto',
+		defaultMessage:
+			'Updates and version history are fetched from GitHub, or from Gitee when GitHub is unreachable.',
+	},
 	preview: {
 		id: 'app.settings.updates.preview-announcement',
 		defaultMessage: 'Preview update announcement',
@@ -132,6 +137,7 @@ async function checkForUpdates() {
 		</SettingsSection>
 
 		<p class="settings-note">{{ formatMessage(messages.security) }}</p>
+		<p class="settings-note">{{ formatMessage(messages.source) }}</p>
 
 		<UpdateAnnouncementHistory :current-version="currentVersion" />
 	</div>

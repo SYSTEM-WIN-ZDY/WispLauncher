@@ -13,7 +13,10 @@
 	"plugins": {
 		"updater": {
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNGNEE1MkMxOTI0MDA4NzYKUldSMkNFQ1N3VkpLUC9kcEtlZFRWak5FRXJsWUw3YllxWGh6bkg3ZEh3K1ZQa1VNZHl6Y0IvQysK",
-			"endpoints": ["https://github.com/SYSTEM-WIN-ZDY/WispLauncher/releases/latest/download/latest.json"],
+			"endpoints": [
+				"https://github.com/SYSTEM-WIN-ZDY/WispLauncher/releases/latest/download/latest.json",
+				"https://gitee.com/system-win-zdy/WispLauncher/releases/download/Release/latest.json"
+			],
 			"windows": {
 				"installMode": "quiet"
 			}

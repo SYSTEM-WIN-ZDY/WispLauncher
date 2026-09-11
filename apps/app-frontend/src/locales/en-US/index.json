@@ -7269,7 +7269,7 @@
     "message": "No bundled update announcements are available."
   },
   "app.settings.updates.announcements.error": {
-    "message": "Could not fetch release history from GitHub."
+    "message": "Could not fetch release history."
   },
   "app.settings.updates.announcements.history": {
     "message": "Version history"
@@ -7279,6 +7279,9 @@
   },
   "app.settings.updates.announcements.retry": {
     "message": "Retry"
+  },
+  "app.settings.updates.announcements.source": {
+    "message": "Fetched from {source}"
   },
   "app.settings.updates.announcements.title": {
     "message": "Update announcements"
@@ -7321,6 +7324,9 @@
   },
   "app.settings.updates.security": {
     "message": "Updates are installed only when their cryptographic signature is valid."
+  },
+  "app.settings.updates.source-auto": {
+    "message": "Updates and version history are fetched from GitHub, or from Gitee when GitHub is unreachable."
   },
   "app.settings.updates.title": {
     "message": "Update source"

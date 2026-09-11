@@ -7278,7 +7278,7 @@
     "message": "当前没有内置的更新公告。"
   },
   "app.settings.updates.announcements.error": {
-    "message": "无法从 GitHub 获取版本历史。"
+    "message": "无法获取版本历史。"
   },
   "app.settings.updates.announcements.history": {
     "message": "历史版本"
@@ -7288,6 +7288,9 @@
   },
   "app.settings.updates.announcements.retry": {
     "message": "重试"
+  },
+  "app.settings.updates.announcements.source": {
+    "message": "数据来源：{source}"
   },
   "app.settings.updates.announcements.title": {
     "message": "更新公告"
@@ -7330,6 +7333,9 @@
   },
   "app.settings.updates.security": {
     "message": "只有通过加密签名验证的更新才会被安装。"
+  },
+  "app.settings.updates.source-auto": {
+    "message": "更新与版本历史将自动从 GitHub 获取，无法连接时切换到 Gitee。"
   },
   "app.settings.updates.title": {
     "message": "更新渠道"

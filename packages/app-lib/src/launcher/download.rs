@@ -731,6 +731,41 @@ fn should_download(path_exists: bool, force: bool) -> bool {
     !path_exists || force
 }
 
+/// Checks whether an existing file at `path` matches the expected size and
+/// (if provided) SHA-1 hash. Returns `true` when the file is intact and need
+/// not be re-downloaded.
+///
+/// This replaces bare `path.exists()` short-circuits that previously skipped
+/// re-download unconditionally: a truncated or zero-byte file (from an
+/// antivirus quarantine, a killed process, or an earlier weak-validation
+/// download) would be skipped forever, so the launcher reported success while
+/// the file was corrupt — causing `ClassNotFoundException` at game launch.
+async fn file_is_intact(
+    path: &Path,
+    expected_size: Option<u64>,
+    expected_sha1: Option<&str>,
+) -> bool {
+    let Ok(metadata) = std::fs::metadata(path) else {
+        return false;
+    };
+    if !metadata.is_file() {
+        return false;
+    }
+    if let Some(expected_size) = expected_size
+        && metadata.len() != expected_size
+    {
+        return false;
+    }
+    let Some(expected_sha1) = expected_sha1 else {
+        // Size matched (or no size constraint); no hash to verify.
+        return true;
+    };
+    match sha1_file_async(path).await {
+        Ok((_, actual_sha1)) => actual_sha1.eq_ignore_ascii_case(expected_sha1),
+        Err(_) => false,
+    }
+}
+
 fn missing_client_bytes(
     st: &State,
     version: &GameVersionInfo,
@@ -779,6 +814,25 @@ fn asset_file_is_usable(path: &Path, expected_size: u64) -> bool {
     std::fs::metadata(path).is_ok_and(|metadata| {
         metadata.is_file() && metadata.len() == expected_size
     })
+}
+
+/// Async, hash-verified counterpart of `asset_file_is_usable`. Used at the
+/// final per-file download decision point where an incorrect "skip" would
+/// leave a corrupt asset in place. The asset's filename *is* its SHA-1, so a
+/// size-only check (the old behavior) accepted same-size corrupt files,
+/// which then crashed the game at runtime.
+async fn asset_is_intact(
+    path: &Path,
+    expected_size: u64,
+    expected_sha1: &str,
+) -> bool {
+    if !asset_file_is_usable(path, expected_size) {
+        return false;
+    }
+    match sha1_file_async(path).await {
+        Ok((_, actual_sha1)) => actual_sha1.eq_ignore_ascii_case(expected_sha1),
+        Err(_) => false,
+    }
 }
 
 fn missing_log_config_bytes(
@@ -1411,7 +1465,14 @@ pub async fn download_client(
         .version_dir(version)
         .join(format!("{version}.jar"));
 
-    if !path.exists() || force {
+    if force
+        || !file_is_intact(
+            &path,
+            Some(client_download.size as u64),
+            Some(&client_download.sha1),
+        )
+        .await
+    {
         let context = InstallErrorContext::new("download Minecraft client")
             .minecraft_version(version.to_string())
             .file_path(format!("{version}.jar"))
@@ -1815,12 +1876,15 @@ pub async fn download_assets(
                     let hash = &item.hash;
                     let name = &item.name;
                     let should_fetch_object = force
-                        || !asset_file_is_usable(resource_path, item.size);
+                        || !asset_is_intact(resource_path, item.size, hash)
+                            .await;
                     let should_fetch_legacy = (with_legacy
-                        && !asset_file_is_usable(
+                        && !asset_is_intact(
                             legacy_resource_path,
                             item.size,
-                        ))
+                            hash,
+                        )
+                        .await)
                         || force;
                     let fetch_progress =
                         if should_fetch_object || should_fetch_legacy {
@@ -2098,7 +2162,22 @@ pub async fn download_libraries(
                 let artifact_path = d::get_path_from_artifact(&library.name)?;
                 let path = st.directories.libraries_dir().join(&artifact_path);
 
-                if path.exists() && !force {
+                if !force
+                    && file_is_intact(
+                        &path,
+                        library
+                            .downloads
+                            .as_ref()
+                            .and_then(|downloads| downloads.artifact.as_ref())
+                            .map(|artifact| artifact.size as u64),
+                        library
+                            .downloads
+                            .as_ref()
+                            .and_then(|downloads| downloads.artifact.as_ref())
+                            .map(|artifact| artifact.sha1.as_str()),
+                    )
+                    .await
+                {
                     return Ok(());
                 }
 
@@ -2313,7 +2392,14 @@ pub async fn download_log_config(
 
     let path = st.directories.log_configs_dir().join(&log_download.id);
 
-    if !path.exists() || force {
+    if force
+        || !file_is_intact(
+            &path,
+            Some(log_download.size as u64),
+            Some(&log_download.sha1),
+        )
+        .await
+    {
         let context = InstallErrorContext::new("download Minecraft log config")
             .minecraft_version(version_info.id.clone())
             .file_path(log_download.id.clone())

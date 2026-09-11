@@ -45,11 +45,15 @@ const messages = defineMessages({
 	},
 	error: {
 		id: 'app.settings.updates.announcements.error',
-		defaultMessage: 'Could not fetch release history from GitHub.',
+		defaultMessage: 'Could not fetch release history.',
 	},
 	retry: {
 		id: 'app.settings.updates.announcements.retry',
 		defaultMessage: 'Retry',
+	},
+	source: {
+		id: 'app.settings.updates.announcements.source',
+		defaultMessage: 'Fetched from {source}',
 	},
 	version: {
 		id: 'app.update-announcement.version',
@@ -73,10 +77,14 @@ interface GithubReleaseEntry {
 
 const GITHUB_RELEASES_ENDPOINT =
 	'https://api.github.com/repos/SYSTEM-WIN-ZDY/WispLauncher/releases?per_page=100'
+const GITEE_RELEASES_ENDPOINT =
+	'https://gitee.com/api/v5/repos/system-win-zdy/WispLauncher/releases?per_page=100'
+const GITEE_RELEASE_URL_PREFIX = 'https://gitee.com/system-win-zdy/WispLauncher/releases/tag/'
 
 const releases = ref<GithubReleaseEntry[]>([])
 const loading = ref(true)
 const error = ref(false)
+const activeSource = ref<'GitHub' | 'Gitee' | null>(null)
 
 function extractVersion(tagName: string, name: string): string {
 	const candidates = [tagName, name]
@@ -93,53 +101,99 @@ function sortByVersionDescending(a: GithubReleaseEntry, b: GithubReleaseEntry): 
 	return b.publishedAt.localeCompare(a.publishedAt)
 }
 
-async function loadGithubReleases() {
+async function fetchGithubReleases(): Promise<GithubReleaseEntry[]> {
+	const response = await fetch(GITHUB_RELEASES_ENDPOINT, {
+		headers: { Accept: 'application/vnd.github+json' },
+	})
+	if (!response.ok) throw new Error(`GitHub API returned ${response.status}`)
+
+	const payload = (await response.json()) as Array<{
+		id: number
+		tag_name: string
+		name: string
+		published_at: string | null
+		body: string | null
+		html_url: string
+	}>
+
+	return payload
+		.filter((release) => release && parseVersion(extractVersion(release.tag_name ?? '', release.name ?? '')))
+		.map((release) => {
+			const version = extractVersion(release.tag_name ?? '', release.name ?? '')
+			const fallbackName =
+				release.name?.trim() && release.name !== 'Release' ? release.name.trim() : `v${version}`
+			return {
+				id: String(release.id),
+				version,
+				publishedAt: release.published_at ?? '',
+				name: fallbackName || `v${version}`,
+				body: release.body ?? '',
+				htmlUrl: release.html_url,
+			}
+		})
+		.sort(sortByVersionDescending)
+}
+
+// Gitee release API responses differ from GitHub's: releases expose
+// `created_at` instead of `published_at`, and there is no release-level
+// `html_url`, so the web URL is derived from the tag name.
+async function fetchGiteeReleases(): Promise<GithubReleaseEntry[]> {
+	const response = await fetch(GITEE_RELEASES_ENDPOINT)
+	if (!response.ok) throw new Error(`Gitee API returned ${response.status}`)
+
+	const payload = (await response.json()) as Array<{
+		id: number
+		tag_name: string
+		name: string
+		created_at: string | null
+		body: string | null
+	}>
+
+	return payload
+		.filter((release) => release && parseVersion(extractVersion(release.tag_name ?? '', release.name ?? '')))
+		.map((release) => {
+			const version = extractVersion(release.tag_name ?? '', release.name ?? '')
+			const fallbackName =
+				release.name?.trim() && release.name !== 'Release' ? release.name.trim() : `v${version}`
+			return {
+				id: String(release.id),
+				version,
+				publishedAt: release.created_at ?? '',
+				name: fallbackName || `v${version}`,
+				body: release.body ?? '',
+				htmlUrl: `${GITEE_RELEASE_URL_PREFIX}${encodeURIComponent(release.tag_name ?? '')}`,
+			}
+		})
+		.sort(sortByVersionDescending)
+}
+
+// Try GitHub first, then fall back to Gitee. Whichever source answers first
+// wins; only when both fail is the error state shown.
+async function loadReleases() {
 	loading.value = true
 	error.value = false
 	try {
-		const response = await fetch(GITHUB_RELEASES_ENDPOINT, {
-			headers: { Accept: 'application/vnd.github+json' },
+		releases.value = await fetchGithubReleases().then((entries) => {
+			activeSource.value = 'GitHub'
+			return entries
 		})
-		if (!response.ok) throw new Error(`GitHub API returned ${response.status}`)
-
-		const payload = (await response.json()) as Array<{
-			id: number
-			tag_name: string
-			name: string
-			published_at: string | null
-			body: string | null
-			html_url: string
-		}>
-
-		releases.value = payload
-			.filter(
-				(release) =>
-					release && parseVersion(extractVersion(release.tag_name ?? '', release.name ?? '')),
-			)
-			.map((release) => {
-				const version = extractVersion(release.tag_name ?? '', release.name ?? '')
-				const fallbackName =
-					release.name?.trim() && release.name !== 'Release'
-						? release.name.trim()
-						: `v${version}`
-				return {
-					id: String(release.id),
-					version,
-					publishedAt: release.published_at ?? '',
-					name: fallbackName || `v${version}`,
-					body: release.body ?? '',
-					htmlUrl: release.html_url,
-				}
+	} catch (githubError) {
+		console.warn('GitHub release history fetch failed, trying Gitee:', githubError)
+		try {
+			releases.value = await fetchGiteeReleases().then((entries) => {
+				activeSource.value = 'Gitee'
+				return entries
 			})
-			.sort(sortByVersionDescending)
-	} catch {
-		error.value = true
+		} catch (giteeError) {
+			console.warn('Gitee release history fetch failed too:', giteeError)
+			error.value = true
+		}
 	} finally {
 		loading.value = false
 	}
 }
 
-loadGithubReleases()
+loadReleases()
 
 const currentAnnouncement = computed(() => getAnnouncementByVersion(props.currentVersion))
 const currentRelease = computed(() =>
@@ -231,6 +285,12 @@ function renderReleaseBody(announcement: LauncherAnnouncement): string {
 			<h3 class="m-0 flex items-center gap-2 text-base font-semibold text-contrast">
 				<HistoryIcon aria-hidden="true" class="size-4 text-secondary" />
 				{{ formatMessage(messages.history) }}
+				<span
+					v-if="!loading && !error && activeSource"
+					class="ml-auto flex-shrink-0 text-xs font-normal text-secondary"
+				>
+					{{ formatMessage(messages.source, { source: activeSource }) }}
+				</span>
 			</h3>
 
 			<div v-if="loading" class="flex items-center gap-2 text-sm text-secondary">
@@ -240,7 +300,7 @@ function renderReleaseBody(announcement: LauncherAnnouncement): string {
 
 			<div v-else-if="error" class="flex flex-col items-start gap-3 text-sm text-secondary">
 				<p class="m-0">{{ formatMessage(messages.error) }}</p>
-				<Button type="outlined" @click="loadGithubReleases">
+				<Button type="outlined" @click="loadReleases">
 					{{ formatMessage(messages.retry) }}
 				</Button>
 			</div>
