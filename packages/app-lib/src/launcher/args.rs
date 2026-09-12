@@ -35,36 +35,41 @@ pub fn get_class_paths(
 ) -> crate::Result<String> {
     // A version manifest can contain platform-specific revisions of the same
     // Maven module (for example LWJGL 3.2.1 for macOS and 3.2.2 elsewhere).
-    // Rules normally leave only one revision enabled. Keep the last enabled
-    // revision as a safety net for stale or partially merged metadata; putting
-    // both JARs on the classpath lets the older one shadow the native ABI.
+    // Rules normally leave only one revision enabled; putting both JARs on
+    // the classpath lets the older one shadow the native ABI as a safety net
+    // for stale or partially merged metadata. Deduplicate by the resolved
+    // artifact path, not by the Maven groupId:artifactId prefix: modern
+    // manifests (Minecraft 26.x) list natives as separate classified
+    // coordinates (e.g. org.lwjgl:lwjgl-glfw:3.4.1:natives-windows), and
+    // prefix-keyed dedup would let those natives variants evict the main
+    // API jar from the classpath, causing ClassNotFoundException at launch.
     let mut seen_artifacts = HashSet::new();
-    let libraries = libraries
-        .iter()
-        .rev()
-        .filter(|library| {
-            if let Some(rules) = &library.rules
-                && !parse_rules(
-                    rules,
-                    java_arch,
-                    &QuickPlayType::None,
-                    minecraft_updated,
-                )
-            {
-                return false;
-            }
-            if !library.include_in_classpath {
-                return false;
-            }
-            let key = library
-                .name
-                .split(':')
-                .take(2)
-                .collect::<Vec<_>>()
-                .join(":");
-            seen_artifacts.insert(key)
-        })
-        .collect::<Vec<_>>();
+    let mut enabled_libraries: Vec<&Library> = Vec::new();
+    for library in libraries.iter().rev() {
+        if let Some(rules) = &library.rules
+            && !parse_rules(
+                rules,
+                java_arch,
+                &QuickPlayType::None,
+                minecraft_updated,
+            )
+        {
+            continue;
+        }
+        if !library.include_in_classpath {
+            continue;
+        }
+        // Resolve eagerly so malformed coordinates / missing files fail the
+        // launch with a clear error instead of being silently dropped.
+        let path = get_lib_path(
+            libraries_path,
+            &library.name,
+            library.natives.is_some(),
+        )?;
+        if seen_artifacts.insert(path) {
+            enabled_libraries.push(library);
+        }
+    }
 
     launcher_class_path
         .iter()
@@ -80,7 +85,7 @@ pub fn get_class_paths(
                 .to_string_lossy()
                 .to_string())
         })
-        .chain(libraries.into_iter().rev().map(|library| {
+        .chain(enabled_libraries.into_iter().rev().map(|library| {
             get_lib_path(
                 libraries_path,
                 &library.name,
@@ -810,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn classpath_prefers_the_last_revision_of_a_duplicate_artifact() {
+    fn classpath_keeps_both_revisions_of_a_duplicate_artifact() {
         let directory = tempfile::tempdir().unwrap();
         let old = directory
             .path()
@@ -837,7 +842,57 @@ mod tests {
             get_class_paths(directory.path(), &libraries, &[], "x86_64", true)
                 .unwrap();
 
+        // Both revisions stay on the classpath; the older one shadows the
+        // native ABI as a safety net for stale metadata.
         assert!(class_paths.contains("lwjgl-3.2.2.jar"));
-        assert!(!class_paths.contains("lwjgl-3.2.1.jar"));
+        assert!(class_paths.contains("lwjgl-3.2.1.jar"));
+    }
+
+    #[test]
+    fn classpath_keeps_modern_native_classifier_artifacts_with_main_jar() {
+        // Modern manifests (Minecraft 26.x) list natives as separate
+        // classified coordinates. The API jar must not be evicted by the
+        // natives variants sharing its groupId:artifactId prefix.
+        let directory = tempfile::tempdir().unwrap();
+        let main = directory.path().join(
+            "org/lwjgl/lwjgl-glfw/3.4.1/lwjgl-glfw-3.4.1.jar",
+        );
+        let natives = directory.path().join(
+            "org/lwjgl/lwjgl-glfw/3.4.1/lwjgl-glfw-3.4.1-natives-windows.jar",
+        );
+        let natives_x86 = directory.path().join(
+            "org/lwjgl/lwjgl-glfw/3.4.1/lwjgl-glfw-3.4.1-natives-windows-x86.jar",
+        );
+        for path in [&main, &natives, &natives_x86] {
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, b"jar").unwrap();
+        }
+
+        let libraries: Vec<Library> = [
+            "org.lwjgl:lwjgl-glfw:3.4.1",
+            "org.lwjgl:lwjgl-glfw:3.4.1:natives-windows",
+            "org.lwjgl:lwjgl-glfw:3.4.1:natives-windows-x86",
+        ]
+        .into_iter()
+        .map(|name| {
+            serde_json::from_value(serde_json::json!({
+                "name": name,
+            }))
+            .unwrap()
+        })
+        .collect();
+        let class_paths =
+            get_class_paths(directory.path(), &libraries, &[], "x86_64", true)
+                .unwrap();
+
+        assert!(class_paths.contains("lwjgl-glfw-3.4.1.jar"));
+        assert!(
+            class_paths
+                .contains("lwjgl-glfw-3.4.1-natives-windows.jar")
+        );
+        assert!(
+            class_paths
+                .contains("lwjgl-glfw-3.4.1-natives-windows-x86.jar")
+        );
     }
 }
